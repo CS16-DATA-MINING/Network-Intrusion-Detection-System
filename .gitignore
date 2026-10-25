@@ -1,0 +1,8 @@
+# Ignore everything inside the data directory
+data/*
+
+# Prevent Git from ignoring the data directory itself
+!data/
+
+# Keep empty data folder structure tracked in Git (optional but recommended)
+!data/.gitkeep
