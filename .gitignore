@@ -6,3 +6,6 @@ data/*
 
 # Keep empty data folder structure tracked in Git (optional but recommended)
 !data/.gitkeep
+
+# Ignore pickle artifacts inside notebooks
+notebooks/**/*.pkl
