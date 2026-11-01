@@ -1,36 +1,96 @@
-# Team Integration Guide: PCAP to Traffic Prediction
+# IDS Team Guide
 
-## Goal and scope
+## What this guide is
 
-This is a small data-mining project, so the first app should be one Streamlit
-application with Python modules behind it—not a frontend, API server, database,
-and deployment stack built as separate projects.
+This file maps the existing notebooks and the planned IDS app/source files to
+the teams that will work on them. The Python files under `src/` are **comment-
+only placeholders**: they explain what a team should implement, but contain no
+working application, PCAP parser, or model code.
 
-The user uploads a packet capture (`.pcap` or `.pcapng`). The app extracts
-bidirectional network flows, converts each flow to a validated model-input
-record, runs the fitted preprocessing and classifier, then displays one result
-per flow and a file-level summary. A separate evaluation page accepts labeled
-records and reports model metrics. Prediction and evaluation are separate
-actions: an uploaded unlabeled capture is not training data.
+The app team may develop its UI independently with temporary local mocks. Those
+mocks must be clearly marked as synthetic and replaced by the real PCAP and
+model-team components before the app is used to classify traffic.
+
+## Proposed project structure
+
+Keep the application and its components under `src/`. The parser's planned
+location is explicitly `src/pcap_parser.py`. Training and analysis remain in
+the existing notebooks unless the teams later agree to move them.
 
 ```text
-PCAP/PCAPNG upload
-  -> offline packet parsing
-  -> bidirectional flow aggregation
-  -> model-schema adapter and validation
-  -> saved preprocessing + classifier
-  -> per-flow predictions and capture summary
+Network-Intrusion-Detection-System/
+├── src/
+│   ├── __init__.py
+│   ├── app.py                 # Streamlit app and user interaction
+│   ├── pcap_parser.py         # PCAP/PCAPNG -> packets/flows; PCAP team
+│   ├── preprocessing.py       # flow-row schema checks and model transforms
+│   ├── models.py              # load trusted fitted model and predict
+│   ├── evaluation.py          # labeled-data metrics; no model fitting here
+│   ├── run_pipeline.py        # optional app/integration entry-point helpers
+│   └── utils.py               # small shared helpers only
+├── notebooks/
+│   ├── About Dataset and It's Cleaning.ipynb
+│   ├── Exploratory Data Analysis.ipynb
+│   ├── Feature_Engineering_and_Data_Preparation.ipynb
+│   ├── ML Models and Results.ipynb
+│   ├── Prediction of Raw Data.ipynb
+│   ├── final_ipynb            # local prepared-data metadata, not a notebook
+│   └── .final_ipynb/          # local generated matrices, preprocessors, models
+├── data/                      # local datasets and captures; do not commit
+├── requirements.txt
+├── README.md
+└── TEAM.md
 ```
 
-## The critical PCAP-to-record problem
+This is a small-project starting point, not a requirement to add more layers.
+Teams can reorganize it later when there is a concrete need. Do not create a
+second root-level app or duplicate transformations across modules.
 
-The current model is not a generic packet classifier. It was trained on the
-UNSW-NB15 schema and expects the raw feature columns below before its saved
-preprocessing can run. The schema includes `label` in the training dataset and
-`attack_cat` as a dataset label; neither should be required or supplied for a
-live prediction.
+## Team ownership
 
-Required prediction input columns (as of the current notebook artifacts):
+| Team | Main files | Responsibilities |
+|---|---|---|
+| App development | `src/app.py`; coordinate `src/run_pipeline.py` | Build the Streamlit interface for capture upload, prediction results, understandable errors, and a separate labeled-data evaluation screen. During independent work, use local synthetic mocks and label them as demos. Integrate the parser and model team's real interfaces later. |
+| PCAP-to-rows | `src/pcap_parser.py`; coordinate `src/preprocessing.py` | Parse PCAP/PCAPNG offline, group packets into flows, and document direction, timeout, counting, units, missing values, and unsupported traffic. Return flow rows under the agreed contract. Do not invent unavailable model features. |
+| Models | `notebooks/Feature_Engineering_and_Data_Preparation.ipynb`, `notebooks/ML Models and Results.ipynb`, `notebooks/Prediction of Raw Data.ipynb`, `src/models.py`, `src/evaluation.py`, `src/preprocessing.py` | Own train-fitted transformations, model selection/training, compatible inference artifacts, and evaluation. Keep the held-out test data out of fitting and tuning. Provide the app an inference interface that reuses the saved fitted objects. |
+| Shared | `src/__init__.py`, `src/utils.py`, `requirements.txt`, `TEAM.md` | Agree interfaces and dependencies; integrate in the same repository; update documentation when contracts change. |
+
+## `src/` file guide
+
+All files below are currently comment-only instructions. Teams should add code
+only when they take ownership of the relevant file.
+
+| File | Team | What belongs there |
+|---|---|---|
+| [`src/__init__.py`](./src/__init__.py) | Shared | Keep the source package marker minimal. |
+| [`src/app.py`](./src/app.py) | App | Streamlit UI: upload, page flow, results, errors, and evaluation-page interaction. Keep model and packet parsing details out of the UI. |
+| [`src/pcap_parser.py`](./src/pcap_parser.py) | PCAP-to-rows | The actual future PCAP/PCAPNG parser location. Parse packets and build/return flow records through an agreed interface. Treat uploaded captures as untrusted; parse offline and surface unsupported data. |
+| [`src/preprocessing.py`](./src/preprocessing.py) | Models + PCAP coordination | Validate flow input columns and apply model-owned fitted preprocessing. Keep field mapping/semantics coordinated with the PCAP team. Never refit encoders/scalers on uploaded or test data. |
+| [`src/models.py`](./src/models.py) | Models | Load trusted fitted artifacts and expose prediction for validated flow rows. Do not retrain from the app. Preserve the exact selected feature order. |
+| [`src/evaluation.py`](./src/evaluation.py) | Models + app | Calculate metrics on labeled evaluation inputs. Use scores for ROC-AUC and predicted classes for class metrics. Never train/tune on the held-out test labels. |
+| [`src/run_pipeline.py`](./src/run_pipeline.py) | App + integration | Optional small orchestration between upload, parser, preprocessing, model, and result display. Do not duplicate the responsibilities of the component files. |
+| [`src/utils.py`](./src/utils.py) | Shared | Small helpers genuinely shared by multiple modules. Avoid turning this into a miscellaneous module. |
+
+## Notebook guide: existing data/model workflow
+
+The notebooks are part of the project and should remain the source of truth for
+the current training workflow until the model team intentionally changes it.
+Run them with `notebooks/` as the working directory.
+
+| Notebook/file | Team | Purpose and app-team relevance |
+|---|---|---|
+| [`notebooks/About Dataset and It's Cleaning.ipynb`](./notebooks/About%20Dataset%20and%20It's%20Cleaning.ipynb) | Models/data | Streams the four UNSW-NB15 traffic CSV parts, takes a reproducible capped sample, cleans selected values, and creates the 70/30 train/test split. Produces prepared CSVs under `data/` and metadata in `notebooks/final_ipynb`. |
+| [`notebooks/Exploratory Data Analysis.ipynb`](./notebooks/Exploratory%20Data%20Analysis.ipynb) | Data | Explores prepared data and plots distributions/correlations. It is analysis, not a runtime dependency of the app. |
+| [`notebooks/Feature_Engineering_and_Data_Preparation.ipynb`](./notebooks/Feature_Engineering_and_Data_Preparation.ipynb) | Models | Creates `network_bytes`, performs train-fitted numeric/log transformations and `proto`/`service`/`state` one-hot encoding, applies fitted transformations to test data, and saves sparse feature matrices plus preprocessing artifacts under `notebooks/.final_ipynb/`. This defines the current model input contract. |
+| [`notebooks/ML Models and Results.ipynb`](./notebooks/ML%20Models%20and%20Results.ipynb) | Models | Loads the persisted sparse train/test inputs, trains/tunes and evaluates classifiers, and saves fitted model artifacts under `notebooks/.final_ipynb/`. The app must use an agreed fitted model artifact, not run notebook training during a prediction request. |
+| [`notebooks/Prediction of Raw Data.ipynb`](./notebooks/Prediction%20of%20Raw%20Data.ipynb) | Models + integration | Demonstrates applying saved preprocessing and the selected random forest to raw UNSW-NB15-style rows, and evaluates on the held-out prepared split. Its preprocessing is a reference for the app/model integration, not a PCAP parser. |
+| [`notebooks/final_ipynb`](./notebooks/final_ipynb) | Generated local data | Pickled metadata from the cleaning notebook; despite its name, this is a local artifact, not an `.ipynb` notebook. Do not edit by hand. |
+| [`notebooks/.final_ipynb/`](./notebooks/.final_ipynb/) | Generated local artifacts | Local sparse matrices, feature metadata, fitted preprocessors, and model pickles consumed by later notebooks. These are generated artifacts and are not the source code to edit. |
+
+## Current raw model input and the PCAP compatibility issue
+
+The current prediction workflow expects 47 raw fields per flow (not including
+the training-only `label` or `attack_cat`):
 
 ```text
 srcip, sport, dstip, dsport, proto, state, dur, sbytes, dbytes, sttl, dttl,
@@ -41,173 +101,34 @@ ct_flw_http_mthd, is_ftp_login, ct_ftp_cmd, ct_srv_src, ct_srv_dst, ct_dst_ltm,
 ct_src_ltm, ct_src_dport_ltm, ct_dst_sport_ltm, ct_dst_src_ltm
 ```
 
-The predictor currently drops identifiers (`srcip`, `sport`, `dstip`, `dsport`)
-and `attack_cat`, removes some correlated columns, creates
-`network_bytes = sbytes + dbytes`, applies the saved `log1p` transforms, then
-uses the saved scaler and `proto`/`service`/`state` one-hot encoders. The model
-uses the feature-importance-selected 55-column subset in the exact saved order.
-The model team must publish the current artifact's schema and selected feature
-order with the model bundle; do not make a second, hand-maintained feature list
-in the UI.
+The fitted workflow derives `network_bytes = sbytes + dbytes`, applies numeric
+transforms/scaling, and one-hot encodes `proto`, `service`, and `state`. The
+feature-selected random forest uses 55 columns in its saved order.
 
-### How the converter should build a flow record
+**Matching column names is not sufficient.** PCAP-derived values must have
+definitions compatible with UNSW-NB15 training. In particular, contextual
+`ct_*` values and application-level `service`, `state`, HTTP, and FTP fields
+may not be available from a packet capture without matching grouping rules or
+visible payload. The PCAP team must document direction, timeouts, units, and
+counting rules. Do not fill unknown features with guessed zeros or dataset
+modes. If semantics cannot be matched, the model team must retrain and evaluate
+using data generated by the chosen parser, or the app must reject/flag those
+flows rather than claim a reliable prediction.
 
-1. Parse packets offline. For a mini-project, choose one capture parser and
-   keep it behind `src/capture/parser.py`. Scapy is a reasonable pure-Python
-   choice; if the team chooses CICFlowMeter or another extractor, wrap its
-   output behind the same internal contract. Do not have the UI parse packets.
-2. Group packets into bidirectional flows using protocol and endpoint tuples.
-   Define direction consistently (for example, first-seen endpoint is source),
-   and document idle/active timeout rules. A flow, not an individual packet,
-   is one candidate row for this model.
-3. Calculate only values whose definitions are documented and reproducible:
-   timestamps/duration, forward and reverse packet and byte counts, packet-size
-   means, inter-arrival intervals/jitter, observed TTLs, TCP window/sequence
-   information when present, and transport protocol/state.
-4. Derive higher-level fields only when their semantics are known. Examples:
-   `sbytes`/`dbytes` depend on the chosen flow direction and byte-counting
-   convention; `sload`/`dload` depend on whether headers and retransmissions
-   count; `service`, `state`, and HTTP/FTP fields depend on protocol
-   dissection and may be unavailable for encrypted traffic.
-5. Treat contextual `ct_*` features as a separate requirement. They count
-   activity across flows or time windows and require exact definitions,
-   grouping keys, and window/reset rules. Do not set these fields to zero or
-   copy dataset modes merely to satisfy the column check.
-6. Emit one row per flow and validate column names, data types, units,
-   categorical values, and missing-value policy against a versioned schema.
-   Preserve an extraction status/reason for values that cannot be computed.
-   Reject or flag unsupported records; never silently fabricate inputs.
+## Integration sequence
 
-**Important compatibility gate:** having the right column names is not enough.
-The current model is trained on UNSW-NB15 records, not on this project's own
-PCAP-extractor output. The converter team must compare its field definitions
-and distributions with the model's training definitions. If a field—especially
-a contextual `ct_*` feature, `service`, or `state`—cannot be reproduced with
-matching semantics, the current model cannot be assumed valid for those rows.
-The safe choices are (a) implement and verify compatible extraction, or
-(b) build a labeled dataset using the chosen PCAP extractor and retrain and
-evaluate the full model pipeline on that representation. Do not bridge the
-gap with guessed defaults.
+1. Agree on the parser output, raw field definitions, units, direction, errors,
+   and model prediction interface.
+2. PCAP team implements `src/pcap_parser.py` and demonstrates the fields it can
+   calculate from a small sanitized capture.
+3. Models team verifies feature compatibility, supplies trusted fitted
+   artifacts, and implements inference in `src/models.py` using
+   `src/preprocessing.py`.
+4. App team connects these modules in `src/app.py`; local mocks used during
+   development must be replaced before real predictions are presented.
+5. Test a sanitized capture end-to-end. Use labeled records separately for
+   evaluation, and never fit/tune on the held-out test set.
 
-## Model handoff and prediction contract
-
-The model team owns a versioned release directory containing:
-
-```text
-models/
-  release/
-    model.joblib                 # complete inference artifact, if pipeline is bundled
-    preprocessing/               # fitted preprocessing if still separate
-    metadata.json                # schema, feature order, versions, model and metrics
-```
-
-The existing notebook artifacts are currently separate pickle files under
-`notebooks/.final_ipynb/`. Do not move or rename them as an isolated change.
-For app integration, prefer a single sklearn `Pipeline` saved with joblib that
-includes all preprocessing and the estimator; this reduces model/preprocessor
-drift. If producing that pipeline requires too much refactoring for the mini
-project, the first app version may load the existing trusted estimator and
-preprocessing artifacts together, with metadata and a smoke test proving they
-match. Pickle/joblib files must only be loaded from trusted project artifacts
-and should be generated using documented compatible Python/scikit-learn
-versions.
-
-The inference interface should accept a validated DataFrame of raw flow
-records and return at least:
-
-```text
-flow identifier | predicted class (normal/attack) | optional model score
-```
-
-The app must not call `fit`, `fit_transform`, or retrain when loading the
-inference artifact. Only apply transformations fitted by the model workflow.
-Show a model score as a score, not a calibrated probability, unless calibration
-has been verified.
-
-## Teams, ownership, and collaboration boundaries
-
-Use separate feature branches, for example `team/capture-parser`,
-`team/model-serving`, and `team/streamlit-app`. Each team should work primarily
-in its owned paths below. The shared schema and integration tests are
-coordinated interfaces: propose changes there and agree them before merging.
-Do not fork the repository into disconnected copies; integrate branches back
-into the same project so the app can import the teams' modules.
-
-| Team | Primary ownership | Deliverables |
-|---|---|---|
-| **PCAP-to-rows team** | `src/capture/`, `tests/capture/`, `docs/contracts/flow-record-schema.json` | Offline parser, flow aggregation, field definitions/units, invalid-input behavior, sample fixtures, and compatibility evidence. |
-| **Models team** | `notebooks/`, `src/model/`, `models/release/`, `tests/model/` | Reproducible training/evaluation, preprocessing + estimator bundle, metadata/schema contract, class/score semantics, artifact smoke test. Never fit on the held-out test split. |
-| **App team** | `app.py`, `src/app/`, `src/inference/`, `src/evaluation/`, `tests/app/` | Streamlit upload and validation, prediction display, capture summary, separate labeled-data evaluation, and user-facing errors. Do not duplicate model preprocessing. |
-| **Integration (all teams)** | `docs/contracts/`, `tests/integration/`, `TEAM.md` | Agree the schema and field semantics, review contract changes, run an end-to-end fixture from capture to prediction, and update this handoff. |
-
-`data/` is for local datasets and captures and remains Git-ignored. Do not
-commit user captures, raw datasets, generated test data, or model binaries
-unless the team explicitly decides that a sanitized artifact is suitable for
-distribution.
-
-## Proposed project structure
-
-```text
-Network-Intrusion-Detection-System/
-├── app.py                              # Streamlit entry point; thin UI layer
-├── src/
-│   ├── capture/
-│   │   ├── parser.py                   # PCAP/PCAPNG parsing boundary
-│   │   ├── flow_builder.py             # bidirectional flow aggregation
-│   │   └── adapter.py                  # extracted flow -> model raw schema
-│   ├── model/
-│   │   ├── inference.py                # load artifact and predict; no fitting
-│   │   └── artifacts.py                # trusted artifact paths and metadata checks
-│   ├── app/
-│   │   ├── upload.py                   # upload constraints and validation
-│   │   └── views.py                    # prediction and evaluation pages
-│   └── evaluation/
-│       └── metrics.py                  # metrics for labeled evaluation records
-├── models/
-│   └── release/                        # generated model bundle; normally ignored
-├── docs/
-│   └── contracts/
-│       └── flow-record-schema.json     # agreed field names, types, units, version
-├── tests/
-│   ├── capture/                        # parser and flow aggregation fixtures
-│   ├── model/                          # artifact/schema/prediction smoke tests
-│   ├── app/                            # input and UI-facing behavior tests
-│   └── integration/                    # PCAP fixture -> flow -> prediction
-├── data/                               # local captures/datasets; never commit
-├── notebooks/                          # existing training and analysis workflow
-├── README.md
-└── TEAM.md
-```
-
-This is a proposed ownership map; folders not present yet should be created by
-the team responsible for them. Keep `app.py` small and avoid committing local
-artifacts into `models/release/` without an explicit distribution decision.
-
-## Minimum integration milestones
-
-1. **Agree the contract:** model team publishes exact feature names, types,
-   units, category behavior, selected feature order, and artifact version;
-   capture team records which fields it can derive and how.
-2. **Prove conversion:** create a small sanitized PCAP fixture and expected
-   flow rows. Test direction, timeouts, retransmissions, missing protocols,
-   unsupported/encrypted traffic, and contextual counters.
-3. **Prove model compatibility:** run the exact preprocessing and model on
-   converter-produced rows. Compare field distributions and investigate every
-   fallback. If semantics differ, pause integration and retrain/reevaluate
-   with compatible data.
-4. **Build the app:** implement upload, limits, progress/error reporting,
-   prediction table, and downloadable result CSV. Keep evaluation of labeled
-   records on a distinct page.
-5. **End-to-end check:** run one test capture through parsing, schema
-   validation, preprocessing, prediction, and UI result rendering. Add a smoke
-   test that loads the released artifact and predicts one valid row.
-
-## Security and practical limits
-
-Treat capture files as untrusted input. Parse offline; impose file-size,
-packet-count, and processing-time limits; avoid executing uploaded content;
-do not retain uploads after processing unless the user explicitly requests it;
-and avoid displaying or logging payloads and private endpoint identifiers.
-The first version is a demonstration/educational tool, not a production network
-security monitor or a guarantee that a flow is malicious.
-
+Keep captures and datasets private and out of Git. Avoid logging payloads or
+private endpoint information. This is a student mini-project, not a
+production intrusion-detection guarantee.
