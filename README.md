@@ -14,6 +14,13 @@ The notebooks follow this general sequence:
 4. Save the transformed train and test splits for the model notebook.
 5. Tune and evaluate classifiers using the saved splits.
 
+For the mini-project application plan—including how the PCAP-to-flow converter
+must meet the model's input contract, team-owned folders, proposed project
+structure, and integration checks—see the [team integration guide](./TEAM.md).
+The repository currently contains the modeling notebooks; the Streamlit app
+and PCAP parser structure in that guide are proposed work, not implemented
+features.
+
 ## Dataset and setup
 
 The data files are not included in Git. The cleaning notebook expects these files under `data/`:
