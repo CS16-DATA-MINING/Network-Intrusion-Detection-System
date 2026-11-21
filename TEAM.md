@@ -89,6 +89,18 @@ The safe choices are (a) implement and verify compatible extraction, or
 evaluate the full model pipeline on that representation. Do not bridge the
 gap with guessed defaults.
 
+The current `src/capture/` implementation is diagnostic-only: it records
+observed endpoints, protocol, packet/byte counts, duration, packet-size means,
+first-observed TTL/window/sequence values, and capture timestamps. Byte counts
+use Scapy's captured packet length (which depends on the capture link type).
+Packets with the same bidirectional endpoint/protocol tuple are grouped for
+the whole capture; no idle timeout is applied. Flow rows include
+`model_ready=False` because these measurements do not reproduce the model's
+complete UNSW-NB15 feature definitions. The CSV from `main_parser.py` must not
+be sent to the saved model; missing fields are intentionally not filled with
+guessed values. This status can change only after the compatibility gate above
+passes.
+
 ## Model handoff and prediction contract
 
 The model team owns a versioned release directory containing:
@@ -210,4 +222,3 @@ do not retain uploads after processing unless the user explicitly requests it;
 and avoid displaying or logging payloads and private endpoint identifiers.
 The first version is a demonstration/educational tool, not a production network
 security monitor or a guarantee that a flow is malicious.
-

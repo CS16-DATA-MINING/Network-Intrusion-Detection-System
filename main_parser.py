@@ -1,34 +1,36 @@
+from pathlib import Path
+
 import pandas as pd
-import os
-from src.capture.parser import lire_pcap
+
 from src.capture.flow_builder import grouper_en_flux
+from src.capture.parser import lire_pcap
+
 
 def pipeline_pcap_to_csv(chemin_pcap, chemin_csv_sortie):
-    if not os.path.exists(chemin_pcap):
-        print(f"❌ Erreur : Le fichier de capture réseau '{chemin_pcap}' est introuvable.")
-        print("Veuillez vérifier qu'un fichier valide est bien placé dans le dossier 'data' et nommé 'sample.pcap'.")
-        return
+    pcap_path = Path(chemin_pcap)
+    if not pcap_path.is_file():
+        raise FileNotFoundError(f"Fichier de capture introuvable : {pcap_path}")
 
-    # 1. Lecture du fichier de paquets
-    liste_paquets = lire_pcap(chemin_pcap)
-    if not liste_paquets:
-        return
-    
-    # 2. Regroupement par flux de communication
-    liste_flux = grouper_en_flux(liste_paquets)
-    
-    # 3. Structuration en tableau et sauvegarde au format attendu (CSV)
-    df = pd.DataFrame(liste_flux)
-    if not df.empty:
-        df['network_bytes'] = df['sbytes'] + df['dbytes']
-        if 'start_time' in df.columns:
-            df = df.drop(columns=['start_time'])
-            
-    df.to_csv(chemin_csv_sortie, index=False)
-    print(f"✅ Opération réussie ! Le fichier CSV final est disponible ici : {chemin_csv_sortie}")
+    packets = lire_pcap(pcap_path)
+    if not packets:
+        raise ValueError(f"Aucun paquet IP exploitable dans {pcap_path}")
+
+    flows = grouper_en_flux(packets)
+    if not flows:
+        raise ValueError(f"Aucun flux exploitable dans {pcap_path}")
+
+    output_path = Path(chemin_csv_sortie)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    dataframe = pd.DataFrame.from_records(flows)
+    dataframe.to_csv(output_path, index=False)
+
+    print(f"CSV de métriques observées écrit : {output_path}")
+    print(
+        "Attention : les lignes sont marquées model_ready=False. "
+        "L'extracteur ne reproduit pas le schéma UNSW-NB15 du modèle."
+    )
+    return dataframe
+
 
 if __name__ == "__main__":
-    fichier_entree = "data/sample.pcap" 
-    fichier_sortie = "data/trafic_client.csv"
-    
-    pipeline_pcap_to_csv(fichier_entree, fichier_sortie)
+    pipeline_pcap_to_csv("data/sample.pcap", "data/trafic_client.csv")
