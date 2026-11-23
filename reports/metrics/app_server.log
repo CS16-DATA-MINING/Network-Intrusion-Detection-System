@@ -1,0 +1,53 @@
+NIDS : ouvrez http://127.0.0.1:5055
+ * Serving Flask app 'src.app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5055
+Press CTRL+C to quit
+127.0.0.1 - - [21/Nov/2026 20:44:39] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:39] "GET /pcap?demo=demo_unsw_replay&profile=portable HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:40] "GET /static/js/common.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:40] "GET /static/css/app.css HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:40] "GET /vendor/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:40] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:40] "GET /api/models/list?task=binary&profile=full HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:40] "GET /api/model-info HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:40] "GET /api/models/list?task=binary&profile=portable HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:40] "GET /api/model-info HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:42] "POST /api/pcap HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:59] "GET /clustering HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:59] "GET /static/css/app.css HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:59] "GET /vendor/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:59] "GET /static/js/common.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:59] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:44:59] "GET /api/unsupervised HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:00] "GET /api/dendrogram?method=ward HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:01] "GET /extractor HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:01] "GET /static/css/app.css HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:01] "GET /vendor/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:01] "GET /static/js/common.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:01] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:01] "GET /api/extractor HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:03] "GET /stats HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:03] "GET /static/css/app.css HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:03] "GET /vendor/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:03] "GET /static/js/common.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:03] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:03] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:04] "GET /importance HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:04] "GET /static/css/app.css HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:04] "GET /vendor/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:04] "GET /static/js/common.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:04] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:04] "GET /api/importance HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:06] "GET /rules HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:06] "GET /static/css/app.css HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:06] "GET /vendor/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:06] "GET /static/js/common.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:06] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:06] "GET /api/rules HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:08] "GET /about HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:08] "GET /static/css/app.css HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:08] "GET /vendor/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:08] "GET /static/js/common.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2026 20:45:08] "GET /api/health HTTP/1.1" 200 -
