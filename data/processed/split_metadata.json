@@ -1,0 +1,89 @@
+{
+  "raw_stats": {
+    "files": {
+      "UNSW-NB15_1.csv": 700001,
+      "UNSW-NB15_2.csv": 700001,
+      "UNSW-NB15_3.csv": 700001,
+      "UNSW-NB15_4.csv": 440044
+    },
+    "full_counts": {
+      "Normal": 2218764,
+      "Generic": 215481,
+      "Exploits": 44525,
+      "Fuzzers": 24246,
+      "DoS": 16353,
+      "Reconnaissance": 13987,
+      "Analysis": 2677,
+      "Backdoor": 2329,
+      "Shellcode": 1511,
+      "Worms": 174
+    },
+    "full_total": 2540047,
+    "sample_total": 106691,
+    "sample_counts": {
+      "Normal": 60000,
+      "Generic": 8000,
+      "Reconnaissance": 8000,
+      "Fuzzers": 8000,
+      "DoS": 8000,
+      "Exploits": 8000,
+      "Analysis": 2677,
+      "Backdoor": 2329,
+      "Shellcode": 1511,
+      "Worms": 174
+    }
+  },
+  "cleaning_report": {
+    "rows_in": 106691,
+    "missing_ct_flw_http_mthd": 65059,
+    "missing_is_ftp_login": 71187,
+    "missing_ct_ftp_cmd": 71187,
+    "is_ftp_login_gt1": 16,
+    "inf_values": 0,
+    "incoherent_labels": 0,
+    "duplicates_removed": 15402,
+    "conflicting_vectors": 8053,
+    "rows_out": 91289,
+    "class_counts": {
+      "Normal": 57279,
+      "Fuzzers": 7476,
+      "Exploits": 6390,
+      "Reconnaissance": 5989,
+      "Generic": 5111,
+      "DoS": 3505,
+      "Analysis": 2032,
+      "Backdoor": 1880,
+      "Shellcode": 1456,
+      "Worms": 171
+    }
+  },
+  "train_rows": 73031,
+  "test_rows": 18258,
+  "test_size": 0.2,
+  "random_state": 42,
+  "stratify": "attack_cat",
+  "train_counts": {
+    "Normal": 45823,
+    "Fuzzers": 5981,
+    "Exploits": 5112,
+    "Reconnaissance": 4791,
+    "Generic": 4089,
+    "DoS": 2804,
+    "Analysis": 1625,
+    "Backdoor": 1504,
+    "Shellcode": 1165,
+    "Worms": 137
+  },
+  "test_counts": {
+    "Normal": 11456,
+    "Fuzzers": 1495,
+    "Exploits": 1278,
+    "Reconnaissance": 1198,
+    "Generic": 1022,
+    "DoS": 701,
+    "Analysis": 407,
+    "Backdoor": 376,
+    "Shellcode": 291,
+    "Worms": 34
+  }
+}
