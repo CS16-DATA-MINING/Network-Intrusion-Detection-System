@@ -1,0 +1,51 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+.env
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# --- Archives (jamais dans Git) ---
+zips/
+zips.zip
+*.zip
+*.bundle
+
+# --- Artefacts intermédiaires des notebooks ---
+notebooks/.final_ipynb/*
+!notebooks/.final_ipynb/.gitkeep
+notebooks/*.pkl
+
+# --- Données volumineuses (dataset public : scripts/download_data.py) ---
+data/.complete/
+data/raw/UNSW-NB15_1.csv
+data/raw/UNSW-NB15_2.csv
+data/raw/UNSW-NB15_3.csv
+data/raw/UNSW-NB15_4.csv
+
+# --- Modèles trop lourds (> 20 Mo, regénérables via scripts/train.py) ---
+models/all/multiclass_full_voting.joblib
+models/all/multiclass_full_extra_trees.joblib
+models/all/multiclass_portable_random_forest.joblib
+
+# --- Documents externes / fichiers perso ---
+NourMoustafathesis.pdf
+Data_Mining_Course.pdf
+mini_project_proposal*.pdf
+CLAUDE.md
+PROMPTS.md
+image*.png
+file.txt
+files_sizes.csv
+
+# --- Logs ---
+*.log
