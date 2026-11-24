@@ -1,4 +1,4 @@
-# Division du projet — Network Intrusion Detection System
+﻿# Division du projet — Network Intrusion Detection System
 
 > Chaque membre commite **uniquement ses fichiers/dossiers**, avec **sa propre identité Git**.
 > Personne ne modifie les fichiers d'un autre membre → aucun conflit.
@@ -19,14 +19,14 @@
 - [x] **Commit 1 — structure** : `.gitignore`, dossiers vides (`.gitkeep`), `devision_project.md`
 - [x] **Commit 2 — configuration** : `requirements.txt`, `pytest.ini`, `src/__init__.py`, `src/config.py`
 - [x] **Commit 3 — nettoyage** : retrait de `notebooks/archive/`
-- [ ] **Commit 4 — données**
+- [x] **Commit 4 — données**
   - `data/raw/NUSW-NB15_features.csv`
   - `data/raw/UNSW-NB15_LIST_EVENTS.csv`
   - `data/interim/` *(dossier entier)*
   - `data/processed/` *(dossier entier)*
   - `src/prepare_data.py`
   - `scripts/download_data.py`
-- [ ] **Commit 5 — prétraitement & statistiques**
+- [x] **Commit 5 — prétraitement & statistiques**
   - `src/preprocessing.py`
   - `src/features.py`
   - `src/visualization.py`
