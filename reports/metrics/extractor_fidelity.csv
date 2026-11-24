@@ -1,0 +1,9 @@
+feature,formule,concordance_pct,n
+sload,(sbytes − sbytes/spkts)·8/dur,99.235,198852
+dload,(dbytes − dbytes/dpkts)·8/dur,99.86,178434
+smeansz,round(sbytes/spkts),100.0,199998
+dmeansz,round(dbytes/dpkts),100.0,178704
+tcprtt,synack + ackdat,100.0,200000
+ct_state_ttl,Algorithme 3.3 (règles TTL × état),99.98,200000
+is_sm_ips_ports,Algorithme 3.2,99.973,200000
+swin (TCP),"min(fenêtre du 1er segment, 255)",99.992,131656

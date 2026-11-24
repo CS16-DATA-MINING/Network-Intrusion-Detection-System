@@ -44,7 +44,7 @@
   - `notebooks/06_explicabilite.ipynb`
   - `notebooks/07_extraction_pcap.ipynb`
   - `notebooks/build_notebooks.py`
-- [ ] **Commit 8 — résultats**
+- [x] **Commit 8 — résultats**
   - `reports/` *(dossier entier)*
   - `scripts/build_report.py`
   - `scripts/update_readme_results.py`

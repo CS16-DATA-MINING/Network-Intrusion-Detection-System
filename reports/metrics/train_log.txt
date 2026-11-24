@@ -1,0 +1,69 @@
+18:17:46 === Tâche binary — profil full ===
+18:18:01   [binary/full] Zero-R (baseline)                  CV f1=0.0000±0.0000 | test 0.0000 | 2s
+18:19:42   [binary/full] K-NN                               CV f1=0.9871±0.0021 | test 0.9867 | 97s
+18:20:25 === Tâche binary — profil full ===
+18:20:31   [binary/full] Zero-R (baseline)                  CV f1=0.0000±0.0000 | test 0.0000 | 1s
+18:21:24   [binary/full] K-NN                               CV f1=0.9871±0.0021 | test 0.9867 | 48s
+18:21:53   [binary/full] Arbre de décision (CART)           CV f1=0.9873±0.0013 | test 0.9879 | 130s
+18:25:05   [binary/full] Random Forest                      CV f1=0.9875±0.0012 | test 0.9879 | 185s
+18:25:27   [binary/full] Naïve Bayes gaussien               CV f1=0.9395±0.0027 | test 0.9164 | 22s
+18:25:52   [binary/full] Naïve Bayes de Bernoulli           CV f1=0.9200±0.0027 | test 0.9211 | 24s
+18:26:05   [binary/full] Naïve Bayes multinomial            CV f1=0.8924±0.0036 | test 0.8926 | 12s
+18:26:50   [binary/full] SVM (SVC)                          CV f1=0.9899±0.0022 | test 0.9880 | 35s
+18:27:21   [binary/full] Régression logistique              CV f1=0.9873±0.0011 | test 0.9878 | 30s
+18:27:33   [binary/full] Analyse discriminante linéaire     CV f1=0.9837±0.0012 | test 0.9839 | 11s
+18:29:47   [binary/full] Extra Trees                        CV f1=0.9875±0.0012 | test 0.9880 | 131s
+18:42:44   [binary/full] AdaBoost                           CV f1=0.9870±0.0014 | test 0.9874 | 760s
+18:43:33   [binary/full] Gradient Boosting (histogrammes)   CV f1=0.9874±0.0010 | test 0.9879 | 45s
+18:45:17   [binary/full] XGBoost                            CV f1=0.9873±0.0012 | test 0.9879 | 101s
+18:45:57   [binary/full] Vote souple (RF+ET+XGB)            CV(commun) 0.9866 | test 0.9880
+18:47:30   [binary/full] Stacking (RF+ET+XGB → LR)          CV(commun) 0.9860 | test 0.9869
+18:47:30   => meilleur modèle binary/full (selon CV) : svm
+18:47:31 === Tâche multiclass — profil full ===
+18:47:34   [multiclass/full] Zero-R (baseline)                  CV f1_macro=0.0771±0.0000 | test 0.0771 | 1s
+18:48:18   [multiclass/full] K-NN                               CV f1_macro=0.5874±0.0163 | test 0.5856 | 28s
+18:50:21   [multiclass/full] Arbre de décision (CART)           CV f1_macro=0.6761±0.0096 | test 0.6837 | 122s
+18:53:22   [multiclass/full] Random Forest                      CV f1_macro=0.6909±0.0023 | test 0.6915 | 177s
+18:53:45   [multiclass/full] Naïve Bayes gaussien               CV f1_macro=0.3494±0.0077 | test 0.3411 | 22s
+18:54:05   [multiclass/full] Naïve Bayes de Bernoulli           CV f1_macro=0.4151±0.0062 | test 0.4245 | 19s
+18:54:15   [multiclass/full] Naïve Bayes multinomial            CV f1_macro=0.3935±0.0069 | test 0.3978 | 10s
+19:01:32   [multiclass/full] Régression logistique              CV f1_macro=0.5721±0.0098 | test 0.5760 | 407s
+19:06:37   [multiclass/full] Extra Trees                        CV f1_macro=0.6723±0.0055 | test 0.6851 | 295s
+19:13:10   [multiclass/full] Gradient Boosting (histogrammes)   CV f1_macro=0.6728±0.0104 | test 0.6919 | 339s
+19:30:31   [multiclass/full] XGBoost                            CV f1_macro=0.6777±0.0118 | test 0.6825 | 1024s
+19:31:31   [multiclass/full] Vote souple (RF+ET+XGB)            CV(commun) 0.6640 | test 0.6908
+19:38:14   [multiclass/full] Stacking (RF+ET+XGB → LR)          CV(commun) 0.6660 | test 0.7674
+19:38:14   => meilleur modèle multiclass/full (selon CV) : random_forest
+19:38:14 === Tâche binary — profil portable ===
+19:38:19   [binary/portable] Zero-R (baseline)                  CV f1=0.0000±0.0000 | test 0.0000 | 1s
+19:39:14   [binary/portable] K-NN                               CV f1=0.9848±0.0021 | test 0.9849 | 42s
+19:41:43   [binary/portable] Arbre de décision (CART)           CV f1=0.9844±0.0011 | test 0.9863 | 148s
+19:43:49   [binary/portable] Random Forest                      CV f1=0.9866±0.0015 | test 0.9874 | 122s
+19:44:14   [binary/portable] Naïve Bayes gaussien               CV f1=0.8833±0.0039 | test 0.8804 | 24s
+19:45:09   [binary/portable] XGBoost                            CV f1=0.9861±0.0012 | test 0.9869 | 50s
+19:45:09   => meilleur modèle binary/portable (selon CV) : random_forest
+19:45:09 === Tâche multiclass — profil portable ===
+19:45:13   [multiclass/portable] Zero-R (baseline)                  CV f1_macro=0.0771±0.0000 | test 0.0771 | 1s
+19:45:55   [multiclass/portable] K-NN                               CV f1_macro=0.5729±0.0162 | test 0.5772 | 27s
+19:48:39   [multiclass/portable] Arbre de décision (CART)           CV f1_macro=0.6554±0.0129 | test 0.6471 | 163s
+19:50:43   [multiclass/portable] Random Forest                      CV f1_macro=0.6672±0.0057 | test 0.6616 | 106s
+19:52:10   [multiclass/portable] Naïve Bayes gaussien               CV f1_macro=0.3073±0.0034 | test 0.3109 | 84s
+19:59:32   [multiclass/portable] XGBoost                            CV f1_macro=0.6633±0.0112 | test 0.6691 | 367s
+19:59:32   => meilleur modèle multiclass/portable (selon CV) : random_forest
+EXIT 0
+20:09:38 [binary/full] déjà entraîné (reprise) — rechargement des résultats
+20:09:38 [multiclass/full] déjà entraîné (reprise) — rechargement des résultats
+20:09:38 [binary/portable] déjà entraîné (reprise) — rechargement des résultats
+20:09:38 [multiclass/portable] déjà entraîné (reprise) — rechargement des résultats
+20:39:51 [binary/full] déjà entraîné (reprise) — rechargement des résultats
+20:39:51 [multiclass/full] déjà entraîné (reprise) — rechargement des résultats
+20:39:51 [binary/portable] déjà entraîné (reprise) — rechargement des résultats
+20:39:51 [multiclass/portable] déjà entraîné (reprise) — rechargement des résultats
+20:40:45 [binary/full] déjà entraîné (reprise) — rechargement des résultats
+20:40:45 [multiclass/full] déjà entraîné (reprise) — rechargement des résultats
+20:40:45 [binary/portable] déjà entraîné (reprise) — rechargement des résultats
+20:40:45 [multiclass/portable] déjà entraîné (reprise) — rechargement des résultats
+20:42:02 [binary/full] déjà entraîné (reprise) — rechargement des résultats
+20:42:02 [multiclass/full] déjà entraîné (reprise) — rechargement des résultats
+20:42:02 [binary/portable] déjà entraîné (reprise) — rechargement des résultats
+20:42:02 [multiclass/portable] déjà entraîné (reprise) — rechargement des résultats

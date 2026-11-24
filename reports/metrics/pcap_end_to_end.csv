@@ -1,0 +1,13 @@
+pcap,description,profile,subset,n_packets,n_flows,n_attacks,extraction_s,accuracy,precision,recall,f1,false_alarm_rate,attack_type_accuracy
+demo_unsw_replay,Rejeu d'enregistrements réels UNSW-NB15 (TTL d'origine),full,tous les flux,72092,1450,363,0.352,0.9344827586206896,0.8661202185792349,0.8732782369146006,0.869684499314129,0.045078196872125116,0.71900826446281
+demo_unsw_replay,Rejeu d'enregistrements réels UNSW-NB15 (TTL d'origine),full,jamais vus à l'entraînement,72092,1010,85,0.352,0.9544554455445544,0.648854961832061,1.0,0.7870370370370371,0.04972972972972973,0.9529411764705882
+demo_unsw_replay,Rejeu d'enregistrements réels UNSW-NB15 (TTL d'origine),portable,tous les flux,72092,1450,363,0.352,0.9655172413793104,0.8789346246973365,1.0,0.9355670103092784,0.045998160073597055,0.7300275482093664
+demo_unsw_replay,Rejeu d'enregistrements réels UNSW-NB15 (TTL d'origine),portable,jamais vus à l'entraînement,72092,1010,85,0.352,0.9534653465346534,0.6439393939393939,1.0,0.783410138248848,0.05081081081081081,0.9294117647058824
+demo_unsw_replay_ttl64,"Même rejeu, TTL d'hôtes modernes (64)",full,tous les flux,72092,1450,363,0.396,0.7503448275862069,1.0,0.0027548209366391185,0.005494505494505495,0.0,0.0
+demo_unsw_replay_ttl64,"Même rejeu, TTL d'hôtes modernes (64)",full,jamais vus à l'entraînement,72092,1010,85,0.396,0.9168316831683169,1.0,0.011764705882352941,0.023255813953488372,0.0,0.0
+demo_unsw_replay_ttl64,"Même rejeu, TTL d'hôtes modernes (64)",portable,tous les flux,72092,1450,363,0.396,0.9655172413793104,0.8789346246973365,1.0,0.9355670103092784,0.045998160073597055,0.7300275482093664
+demo_unsw_replay_ttl64,"Même rejeu, TTL d'hôtes modernes (64)",portable,jamais vus à l'entraînement,72092,1010,85,0.396,0.9534653465346534,0.6439393939393939,1.0,0.783410138248848,0.05081081081081081,0.9294117647058824
+demo_unsw_testbed,Scénarios synthétiques (topologie du banc de test),full,tous les flux,4155,428,274,0.041,0.8434579439252337,1.0,0.7554744525547445,0.8607068607068608,0.0,0.28832116788321166
+demo_unsw_testbed,Scénarios synthétiques (topologie du banc de test),portable,tous les flux,4155,428,274,0.041,0.5467289719626168,0.8636363636363636,0.3467153284671533,0.4947916666666667,0.09740259740259741,0.0
+demo_modern_ttl,Scénarios synthétiques (TTL 64/128),full,tous les flux,3250,316,185,0.037,0.41455696202531644,0.0,0.0,0.0,0.0,0.0
+demo_modern_ttl,Scénarios synthétiques (TTL 64/128),portable,tous les flux,3250,316,185,0.037,0.5537974683544303,0.7558139534883721,0.35135135135135137,0.4797047970479705,0.16030534351145037,0.0

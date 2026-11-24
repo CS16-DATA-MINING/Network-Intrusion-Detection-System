@@ -1,0 +1,12 @@
+best,model,mean_diff,W,p_value,p_holm,significant
+stacking,knn,0.10843434714248323,0.0,0.0625,0.6875,False
+stacking,decision_tree,0.052305603805928545,0.0,0.0625,0.6875,False
+stacking,random_forest,0.0017977121653274032,6.0,0.8125,1.0,False
+stacking,gaussian_nb,0.32858757777899583,0.0,0.0625,0.6875,False
+stacking,bernoulli_nb,0.2555677414589689,0.0,0.0625,0.6875,False
+stacking,multinomial_nb,0.2776282210360927,0.0,0.0625,0.6875,False
+stacking,logistic_regression,0.11294978501349254,0.0,0.0625,0.6875,False
+stacking,extra_trees,0.012927520376646951,1.0,0.125,0.6875,False
+stacking,hist_gb,0.023703186322152514,0.0,0.0625,0.6875,False
+stacking,xgboost,0.017684591940113403,1.0,0.125,0.6875,False
+stacking,voting,0.0019447264268951825,6.0,0.8125,1.0,False

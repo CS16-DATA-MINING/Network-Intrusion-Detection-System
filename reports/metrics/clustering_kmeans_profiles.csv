@@ -1,0 +1,7 @@
+cluster,taille,pct_attaque,sbytes_med,dbytes_med,dur_med,sttl_med,proto_mode,service_mode,state_mode,categorie_dominante
+0,7228,0.011759822910902048,3234.0,14992.0,0.0463585,31.0,tcp,-,fin,Normal
+1,1733,0.6139642238892095,114.0,0.0,7e-06,254.0,udp,dns,int,Generic
+2,3346,0.9231918708906156,848.0,354.0,0.8304435,254.0,tcp,-,fin,Fuzzers
+3,2698,0.9421793921423276,200.0,0.0,8e-06,254.0,udp,-,int,Fuzzers
+4,3402,0.01763668430335097,146.0,178.0,0.001089,31.0,udp,dns,con,Normal
+5,1593,0.3239171374764595,1580.0,10168.0,1.012133,31.0,tcp,http,fin,Normal
