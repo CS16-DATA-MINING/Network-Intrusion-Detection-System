@@ -1,4 +1,4 @@
-﻿# Division du projet — Network Intrusion Detection System
+# Division du projet — Network Intrusion Detection System
 
 > Chaque membre commite **uniquement ses fichiers/dossiers**, avec **sa propre identité Git**.
 > Personne ne modifie les fichiers d'un autre membre → aucun conflit.
@@ -32,7 +32,7 @@
   - `src/visualization.py`
   - `src/evaluation/` *(dossier entier)*
   - `tests/test_core.py`
-- [ ] **Commit 6 — non supervisé**
+- [x] **Commit 6 — non supervisé**
   - `src/unsupervised/` *(dossier entier)*
   - `src/run_unsupervised.py`
 - [ ] **Commit 7 — notebooks**
