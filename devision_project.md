@@ -35,7 +35,7 @@
 - [x] **Commit 6 — non supervisé**
   - `src/unsupervised/` *(dossier entier)*
   - `src/run_unsupervised.py`
-- [ ] **Commit 7 — notebooks**
+- [x] **Commit 7 — notebooks**
   - `notebooks/01_eda_and_cleaning.ipynb`
   - `notebooks/02_preprocessing_encoding.ipynb`
   - `notebooks/03_model_training_evaluation.ipynb`
