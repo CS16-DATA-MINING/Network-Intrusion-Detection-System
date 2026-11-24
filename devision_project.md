@@ -17,7 +17,6 @@
 
 ### Dossiers entiers (Islem)
 
-- `notebooks/archive/`
 - `data/interim/`
 - `data/processed/`
 - `reports/`

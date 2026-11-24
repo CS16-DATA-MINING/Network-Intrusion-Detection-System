@@ -49,3 +49,6 @@ files_sizes.csv
 
 # --- Logs ---
 *.log
+
+# --- Ancienne EDA (déjà dans l'historique Git) ---
+notebooks/archive/
