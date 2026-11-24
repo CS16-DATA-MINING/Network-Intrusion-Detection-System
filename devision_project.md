@@ -48,7 +48,7 @@
   - `reports/` *(dossier entier)*
   - `scripts/build_report.py`
   - `scripts/update_readme_results.py`
-- [ ] **Commit 9 — documentation finale** *(en dernier, après tout le monde)*
+- [x] **Commit 9 — documentation finale** *(en dernier, après tout le monde)*
   - `README.md`
   - `TEAM.md`
   - `AGENTS.md`
