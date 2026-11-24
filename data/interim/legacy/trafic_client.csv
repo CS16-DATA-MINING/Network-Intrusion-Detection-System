@@ -1,0 +1,3 @@
+srcip,sport,dstip,dsport,proto,spkts,dpkts,sbytes,dbytes,sttl,dttl,swin,dwin,stcpb,dtcpb,dur,stime,ltime,smeansz,dmeansz,network_bytes,model_ready,model_readiness_reason
+192.168.1.10,443,10.0.0.5,50210,tcp,2,1,87,48,64,61.0,8192.0,4096.0,1000.0,2000.0,0.5,1700000000.0,1700000000.5,43.5,48.0,135,False,PCAP extraction does not reproduce all required UNSW-NB15 features with the training definitions; do not pass this row to the saved model.
+192.168.1.22,53000,8.8.8.8,53,udp,1,0,33,0,64,,,,,,0.0,1700000000.75,1700000000.75,33.0,,33,False,PCAP extraction does not reproduce all required UNSW-NB15 features with the training definitions; do not pass this row to the saved model.
