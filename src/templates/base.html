@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}NIDS{% endblock %} · NIDS UNSW-NB15</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%233987e5'/><path d='M16 6l8 3v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V9z' fill='white'/></svg>">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script src="{{ url_for('plotly_js') }}"></script>
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">IDS</div>
+      <div><div class="brand-title">NIDS · UNSW-NB15</div><div class="brand-sub">Détection d'intrusions réseau</div></div>
+    </div>
+    <nav class="nav">
+      {% set icons = {
+        'home': '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+        'chart': '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+        'sigma': '<path d="M18 5H6l6 7-6 7h12"/>',
+        'trophy': '<path d="M8 4h8v5a4 4 0 0 1-8 0zM5 5H3v2a3 3 0 0 0 3 3M19 5h2v2a3 3 0 0 1-3 3M12 13v4M8 21h8"/>',
+        'bulb': '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/>',
+        'bolt': '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+        'radar': '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l6-6"/>',
+        'cluster': '<circle cx="6" cy="7" r="2.5"/><circle cx="17" cy="6" r="2.5"/><circle cx="9" cy="17" r="2.5"/><circle cx="18" cy="16" r="2.5"/>',
+        'link': '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+        'cpu': '<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>',
+        'book': '<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6a3 3 0 0 0-3 3"/><path d="M20 4v14h-7"/>'} %}
+      {% for ep, url, label, icon in pages %}
+        <a href="{{ url }}" class="{{ 'active' if current == ep else '' }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{{ icons[icon]|safe }}</svg>
+          {{ label }}
+        </a>
+      {% endfor %}
+    </nav>
+    <div class="side-foot">
+      <div id="health"><span class="status-dot"></span>Vérification…</div>
+      <div style="margin-top:6px">Mini-projet Data Mining 2026/2027<br>Codes étudiants : voir Documentation</div>
+    </div>
+  </aside>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script>
+fetch('/api/health').then(r => r.json()).then(h => {
+  const ok = h.models && h.dataset;
+  document.getElementById('health').innerHTML =
+    `<span class="status-dot ${ok ? 'ok' : 'ko'}"></span>${ok ? 'Modèles & données chargés' : 'Artefacts manquants'}`;
+}).catch(() => {});
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
