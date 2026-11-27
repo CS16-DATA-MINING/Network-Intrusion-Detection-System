@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Documentation{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Documentation</h1><p>Problématique, données, méthodologie, API et équipe.</p></div></div>
+<div class="grid g2">
+  <div class="card">
+    <h2>Problématique</h2>
+    <p>Un NIDS (Network Intrusion Detection System) doit signaler les flux malveillants au milieu d'un trafic légitime très majoritaire.
+      Deux questions : <b>ce flux est-il une attaque ?</b> (classification binaire, priorité au rappel) et <b>de quel type ?</b> (10 catégories).
+      Contrainte d'ingénierie : les features doivent être <b>calculables depuis une capture brute</b>, sinon le modèle est inutilisable en production.</p>
+    <h2 style="margin-top:14px">Jeu de données</h2>
+    <dl class="kv">
+      <dt>Source</dt><dd>UNSW-NB15 (UNSW Canberra, Moustafa & Slay 2015) — <a href="https://research.unsw.edu.au/projects/unsw-nb15-dataset" target="_blank">site officiel</a></dd>
+      <dt>Volume brut</dt><dd>2 540 047 flux, 49 colonnes (4 fichiers CSV, ~586 Mo)</dd>
+      <dt>Génération</dt><dd>Outil IXIA PerfectStorm, 100 Go de PCAP, Argus + Bro-IDS + 12 features additionnelles</dd>
+      <dt>Cibles</dt><dd><code>label</code> (0/1) et <code>attack_cat</code> (Normal + Fuzzers, Analysis, Backdoor, DoS, Exploits, Generic, Reconnaissance, Shellcode, Worms)</dd>
+      <dt>Échantillon</dt><dd>Stratifié : 60 000 normaux + jusqu'à 8 000 flux par catégorie (toutes les lignes des classes rares) → 106 691 lignes, 91 289 après nettoyage</dd>
+      <dt>Features modèle</dt><dd>39 (36 numériques + proto, state, service) ; identifiants IP/ports/horodatages et numéros de séquence exclus</dd>
+    </dl>
+  </div>
+  <div class="card">
+    <h2>Méthodologie</h2>
+    <ol style="color:var(--text-2);padding-left:18px;margin:0">
+      <li>Échantillonnage stratifié reproductible (<code>random_state=42</code>) puis nettoyage (ports hexadécimaux, valeurs vides, doublons, codage erroné).</li>
+      <li>EDA + 6 familles de tests statistiques avec correction de Benjamini-Hochberg.</li>
+      <li>Split stratifié 80/20 ; pipeline ajusté sur le train seulement : features dérivées, imputation médiane, log1p data-driven (asymétrie &gt; 2), filtre de corrélation (|r| &gt; 0,95), Z-score, One-Hot (modalités rares regroupées, inconnues tolérées).</li>
+      <li>15 modèles supervisés, GridSearchCV / RandomizedSearchCV, StratifiedKFold(5), scoring F1 / F1-macro ; sélection sur la CV.</li>
+      <li>Évaluation test : accuracy, précision, rappel, F1, ROC-AUC, PR-AUC, MCC, FPR, matrices de confusion ; Friedman, Nemenyi, Wilcoxon, McNemar.</li>
+      <li>Explicabilité : 5 méthodes d'importance, SHAP local, ablation par groupe de features.</li>
+      <li>Non supervisé : K-Means, PAM, CLARA, AGNES, DIANA, DBSCAN, GMM ; anomalies (Isolation Forest, LOF, GMM, distance K-Means) ; règles Apriori.</li>
+      <li>Extracteur PCAP → 47 features, validé sur le CSV officiel et sur des captures étiquetées.</li>
+    </ol>
+  </div>
+</div>
+<div class="grid g2 section">
+  <div class="card">
+    <h2>API REST</h2>
+    <div class="table-wrap" style="max-height:none"><table><tbody>
+      <tr><td class="mono">GET /api/health</td><td>État des artefacts</td></tr>
+      <tr><td class="mono">GET /api/model-info</td><td>Meilleurs modèles, features, versions</td></tr>
+      <tr><td class="mono">POST /api/predict</td><td>JSON <code>{"features": {...}, "model": "xgboost", "profile": "full", "threshold": 0.5}</code></td></tr>
+      <tr><td class="mono">POST /api/pcap</td><td>multipart <code>file</code> (.pcap/.pcapng/.csv) + profile, model, threshold, ct_mode</td></tr>
+      <tr><td class="mono">GET /api/pcap/&lt;job&gt;/download</td><td>CSV des tuples + prédictions</td></tr>
+      <tr><td class="mono">POST /api/eda</td><td>Statistiques filtrées du dashboard</td></tr>
+      <tr><td class="mono">GET /api/models?task=&amp;profile=</td><td>Métriques, courbes, résultats de CV</td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>Équipe et contributions</h2>
+    <p class="hint">Règle d'anonymat du cahier des charges : uniquement les codes étudiants. Matrice détaillée dans le README.</p>
+    <div class="table-wrap" style="max-height:none"><table><thead><tr><th>Code</th><th>Responsabilités</th></tr></thead><tbody>
+      <tr><td>CS16 <span class="badge info">chef</span></td><td>Coordination, données (échantillonnage, nettoyage), application web Flask et API</td></tr>
+      <tr><td>CS10</td><td>Extracteur PCAP → 47 features (Argus/Bro), rejeu et test aller-retour (notebook 07)</td></tr>
+      <tr><td>CS26</td><td>EDA, tests statistiques, prétraitement et encodage (notebooks 01–02)</td></tr>
+      <tr><td>CS27</td><td>Modèles supervisés, optimisation, évaluation, explicabilité (notebooks 03 et 06)</td></tr>
+      <tr><td>RSD07</td><td>Non supervisé, détection d'anomalies, règles d'association (notebooks 04–05), rapport PDF</td></tr>
+    </tbody></table></div>
+    <h2 style="margin-top:14px">Limites</h2>
+    <p>Artefact TTL du banc de test (d'où le profil portable) ; bruit d'étiquetage (vecteurs identiques étiquetés différemment) qui borne la séparation DoS / Exploits / Analysis / Backdoor ;
+      ct_* reproduits approximativement ; captures de démonstration synthétiques (le rapport détaille la marche à suivre avec les PCAP originaux de UNSW-NB15).</p>
+  </div>
+</div>
+{% endblock %}

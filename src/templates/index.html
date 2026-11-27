@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Accueil{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Système de détection d'intrusions réseau (NIDS)</h1>
+    <p>Chaîne Data Mining complète sur UNSW-NB15 : du fichier de capture <b>PCAP</b> aux tuples de 47 features
+      (réimplémentation du cadre Argus + Bro-IDS de la thèse de N. Moustafa), puis classification supervisée,
+      clustering, détection d'anomalies et règles d'association.</p>
+  </div>
+  <div style="display:flex;gap:8px"><a class="btn primary" href="/pcap">Analyser un PCAP</a><a class="btn" href="/predict">Prédire un flux</a></div>
+</div>
+
+<div class="grid g5" id="kpis"><div class="card loading">Chargement…</div></div>
+
+<div class="card section">
+  <h2>Pipeline de bout en bout</h2>
+  <div class="pipeline">
+    <div class="step"><b>1 · Capture</b><span>PCAP / PCAPNG (Ethernet, VLAN, SLL, IPv4/IPv6)</span></div>
+    <div class="step"><b>2 · Flux Argus</b><span>Agrégation bidirectionnelle, état TCP, octets, TTL, gigue, RTT</span></div>
+    <div class="step"><b>3 · Analyse Bro</b><span>Service (DPD), HTTP (trans_depth, res_bdy_len), FTP</span></div>
+    <div class="step"><b>4 · Features additionnelles</b><span>Alg. 3.2–3.9 : ct_state_ttl, ct_* sur 100 connexions</span></div>
+    <div class="step"><b>5 · Prétraitement</b><span>Imputation, log1p, filtre corrélation, Z-score, One-Hot</span></div>
+    <div class="step"><b>6 · Modèles</b><span>15 classifieurs + clustering + anomalies</span></div>
+    <div class="step"><b>7 · Décision</b><span>Alerte, catégorie, explication SHAP</span></div>
+  </div>
+</div>
+
+<div class="grid g2 section">
+  <div class="card">
+    <div class="card-head"><h2>Composition du jeu complet (2,54 M flux)</h2><span class="badge muted">échelle log</span></div>
+    <div id="c_full" class="chart"></div>
+    <p class="hint">Déséquilibre extrême : 87,4 % de trafic normal ; Worms ne compte que 174 flux. D'où un échantillonnage stratifié qui conserve toutes les attaques rares.</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>Échantillon d'étude après nettoyage</h2></div>
+    <div id="c_sample" class="chart"></div>
+    <p class="hint" id="clean_hint"></p>
+  </div>
+</div>
+
+<div class="card section">
+  <div class="card-head"><h2>Meilleurs modèles (sélectionnés sur la validation croisée, évalués sur le test)</h2></div>
+  <div id="best_table"></div>
+</div>
+
+<div class="grid g3 section">
+  <a class="card" href="/eda" style="text-decoration:none"><h2>📊 Dashboard EDA</h2><p>Statistiques descriptives, valeurs manquantes, distributions + KDE, fréquences, corrélations, filtres temps réel.</p></a>
+  <a class="card" href="/models" style="text-decoration:none"><h2>🏆 15 modèles comparés</h2><p>Zero-R, K-NN, CART, RF, 3 Naïve Bayes, SVM, LR, LDA, Extra Trees, AdaBoost, HistGB, XGBoost, vote, stacking.</p></a>
+  <a class="card" href="/clustering" style="text-decoration:none"><h2>🧩 Non supervisé</h2><p>K-Means, PAM/CLARA, AGNES, DIANA, DBSCAN, GMM, Isolation Forest, LOF et règles Apriori.</p></a>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(async () => {
+  const o = await NIDS.get('/api/overview');
+  const best = o.best || {};
+  const bb = best.full_binary || {}, bm = best.full_multiclass || {};
+  const k = [
+    ['Flux bruts', NIDS.fmt(o.raw_total), '4 fichiers CSV UNSW-NB15'],
+    ['Après nettoyage', NIDS.fmt(o.clean_total), `${NIDS.fmt(o.sample_total)} échantillonnés`],
+    ['Features modèle', o.n_features, `sur ${o.n_raw_columns} colonnes brutes`],
+    ['F1 attaque (test)', bb.f1 ? NIDS.pct(bb.f1, 2) : '—', bb.name || ''],
+    ['F1-macro 10 classes', bm.f1_macro ? NIDS.pct(bm.f1_macro, 1) : '—', bm.name || ''],
+  ];
+  document.getElementById('kpis').innerHTML = k.map(([l, v, s]) => `<div class="card kpi"><span class="label">${l}</span><span class="value">${v}</span><span class="sub">${NIDS.esc(s)}</span></div>`).join('');
+  const cats = NIDS.CATS;
+  const full = cats.map((c) => (o.raw_counts || {})[c] || 0);
+  NIDS.plot('c_full', [{ type: 'bar', orientation: 'h', y: cats, x: full, marker: { color: cats.map((c) => c === 'Normal' ? NIDS.STATUS.normal : NIDS.STATUS.attack) },
+    text: full.map((x) => NIDS.fmt(x)), textposition: 'outside', cliponaxis: false, hovertemplate: '%{y} : %{x:,} flux<extra></extra>' }],
+    { xaxis: { type: 'log', title: 'Nombre de flux (log)', range: [2, 7.2] }, yaxis: { autorange: 'reversed' }, margin: { l: 110, r: 70 } });
+  const cl = (o.cleaning || {}).class_counts || {};
+  const tr = o.train_counts || {}, te = o.test_counts || {};
+  NIDS.plot('c_sample', [
+    { type: 'bar', name: 'Train (80 %)', x: cats, y: cats.map((c) => tr[c] || 0), marker: { color: NIDS.SERIES[0] } },
+    { type: 'bar', name: 'Test (20 %)', x: cats, y: cats.map((c) => te[c] || 0), marker: { color: NIDS.SERIES[1] } },
+  ], { barmode: 'group', yaxis: { title: 'Flux' }, xaxis: { tickangle: -30 } });
+  const c = o.cleaning || {};
+  document.getElementById('clean_hint').textContent = `Nettoyage : ${NIDS.fmt(c.duplicates_removed)} doublons exacts supprimés, ${NIDS.fmt(c.conflicting_vectors)} vecteurs identiques mais étiquetés différemment détectés (bruit d'étiquetage connu de UNSW-NB15), split stratifié 80/20 par catégorie.`;
+  const rows = Object.entries(best).map(([key, b]) => ({ tache: key.includes('multi') ? 'Multi-classe (10)' : 'Binaire', profil: key.startsWith('full') ? 'Complet (39 features)' : 'Portable (sans TTL)', modele: b.name, f1: key.includes('multi') ? b.f1_macro : b.f1, accuracy: b.accuracy, roc_auc: b.roc_auc, rappel: b.recall, fpr: b.false_alarm_rate }));
+  NIDS.table('best_table', rows, [{ key: 'tache', label: 'Tâche' }, { key: 'profil', label: 'Profil' }, { key: 'modele', label: 'Modèle retenu' },
+    { key: 'f1', label: 'F1 / F1-macro', fmt: 'pct' }, { key: 'accuracy', label: 'Accuracy', fmt: 'pct' }, { key: 'roc_auc', label: 'ROC-AUC', fmt: 4 },
+    { key: 'rappel', label: 'Rappel (détection)', fmt: 'pct' }, { key: 'fpr', label: 'Taux de fausses alertes', fmt: 'pct' }]);
+})().catch((e) => NIDS.showError('kpis', e));
+</script>
+{% endblock %}
