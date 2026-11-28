@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Dashboard EDA{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Dashboard d'exploration (EDA)</h1>
+    <p>Jeu nettoyé (91 289 flux, 39 features + 2 cibles). Tous les graphiques se recalculent en temps réel selon les filtres ci-dessous.</p></div>
+  <div class="badge info" id="nrows">—</div>
+</div>
+
+<div class="filters" id="filters">
+  <div class="field" style="min-width:330px"><label>Catégories (vide = toutes)</label><div class="chips" id="f_cats"></div></div>
+  <div class="field"><label>Classe</label><select id="f_label"><option value="">Toutes</option><option value="0">Normal</option><option value="1">Attaque</option></select></div>
+  <div class="field"><label>Protocole</label><select id="f_proto"></select></div>
+  <div class="field"><label>Service</label><select id="f_service"></select></div>
+  <div class="field"><label>État</label><select id="f_state"></select></div>
+  <div class="field"><label>Filtre de plage sur</label><select id="f_rvar"></select></div>
+  <div class="field"><label>Min <span id="rmin_v"></span></label><input type="number" id="f_rmin" step="any" style="width:110px"></div>
+  <div class="field"><label>Max <span id="rmax_v"></span></label><input type="number" id="f_rmax" step="any" style="width:110px"></div>
+  <button class="btn" id="f_reset">Réinitialiser</button>
+</div>
+
+<div class="grid g2">
+  <div class="card">
+    <div class="card-head"><h2>1 · Statistiques descriptives (numériques)</h2><span class="hint">tendance centrale, dispersion, forme</span></div>
+    <div id="t_desc"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>2 · Valeurs manquantes (données brutes)</h2><span class="badge muted">avant / après nettoyage</span></div>
+    <div id="c_missing" class="chart short"></div>
+    <div id="missing_notes" class="hint"></div>
+    <h3 style="margin-top:10px">Variables catégorielles</h3>
+    <div id="t_desc_cat"></div>
+  </div>
+</div>
+
+<div class="grid g2 section">
+  <div class="card">
+    <div class="card-head"><h2>3 · Distribution numérique : histogramme + KDE</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="num_var"></select>
+        <div class="seg" id="log_seg"><button data-v="true" class="on">log1p</button><button data-v="false">brut</button></div>
+        <div class="seg" id="split_seg"><button data-v="split" class="on">Normal vs Attaque</button><button data-v="all">Global</button></div>
+      </div></div>
+    <div id="c_hist" class="chart"></div>
+    <p class="hint" id="var_desc"></p>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>Boîtes à moustaches par catégorie</h2><span class="hint">même variable</span></div>
+    <div id="c_box" class="chart"></div>
+  </div>
+</div>
+
+<div class="grid g2 section">
+  <div class="card">
+    <div class="card-head"><h2>4 · Fréquences des variables catégorielles</h2><select id="cat_var"></select></div>
+    <div id="c_cat" class="chart"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>Composition par catégorie d'attaque</h2></div>
+    <div id="c_comp" class="chart"></div>
+  </div>
+</div>
+
+<div class="grid g2 section">
+  <div class="card">
+    <div class="card-head"><h2>5 · Matrice de corrélation</h2><div class="seg" id="corr_seg"><button data-v="spearman" class="on">Spearman</button><button data-v="pearson">Pearson</button></div></div>
+    <div id="c_corr" class="chart tall"></div>
+    <p class="hint">Spearman (rangs) est privilégié : variables non normales à queue lourde (cf. tests de Shapiro-Wilk).</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>Nuage de points (2 500 flux échantillonnés)</h2><div style="display:flex;gap:6px;align-items:center"><span class="hint">Y :</span><select id="scatter_y"></select></div></div>
+    <div id="c_scatter" class="chart tall"></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(async () => {
+  const opt = await NIDS.get('/api/eda/options');
+  const state = { categories: [], label: '', proto: '__all__', service: '__all__', state: '__all__', range_var: 'dur', range_min: '', range_max: '', num_var: 'sbytes', cat_var: 'proto', log: 'true', corr_method: 'spearman', scatter_y: 'dbytes' };
+  let split = 'split';
+  const $ = (id) => document.getElementById(id);
+  $('f_cats').innerHTML = opt.categories.map((c) => `<span class="chip" data-c="${c}">${c}</span>`).join('');
+  $('f_cats').querySelectorAll('.chip').forEach((ch) => ch.addEventListener('click', () => {
+    ch.classList.toggle('on');
+    state.categories = [...$('f_cats').querySelectorAll('.chip.on')].map((x) => x.dataset.c);
+    refresh();
+  }));
+  const fill = (id, vals, all = true) => { $(id).innerHTML = (all ? '<option value="__all__">Tous</option>' : '') + vals.map((v) => `<option value="${v}">${v}</option>`).join(''); };
+  fill('f_proto', opt.proto); fill('f_service', opt.service); fill('f_state', opt.state);
+  fill('f_rvar', opt.numeric, false); fill('num_var', opt.numeric, false); fill('scatter_y', opt.numeric, false);
+  fill('cat_var', ['proto', 'service', 'state', 'attack_cat', 'classe'], false);
+  $('f_rvar').value = 'dur'; $('num_var').value = 'sbytes'; $('scatter_y').value = 'dbytes';
+  const showRange = () => { const r = opt.ranges[state.range_var]; $('rmin_v').textContent = `(${NIDS.fmt(r[0])})`; $('rmax_v').textContent = `(p99 ${NIDS.fmt(r[1])})`; };
+  showRange();
+  const bind = (id, key, ev = 'change') => $(id).addEventListener(ev, () => { state[key] = $(id).value; if (key === 'range_var') { state.range_min = state.range_max = ''; $('f_rmin').value = $('f_rmax').value = ''; showRange(); } refresh(); });
+  bind('f_label', 'label'); bind('f_proto', 'proto'); bind('f_service', 'service'); bind('f_state', 'state');
+  bind('f_rvar', 'range_var'); bind('f_rmin', 'range_min'); bind('f_rmax', 'range_max');
+  bind('num_var', 'num_var'); bind('cat_var', 'cat_var'); bind('scatter_y', 'scatter_y');
+  NIDS.seg('log_seg', (v) => { state.log = v; refresh(); });
+  NIDS.seg('split_seg', (v) => { split = v; render(last); });
+  NIDS.seg('corr_seg', (v) => { state.corr_method = v; refresh(); });
+  $('f_reset').addEventListener('click', () => location.reload());
+
+  // valeurs manquantes (indépendant des filtres)
+  NIDS.get('/api/eda/missing').then((m) => {
+    const keys = Object.keys(m.raw_pct).filter((k) => m.raw_pct[k] > 0).sort((a, b) => m.raw_pct[b] - m.raw_pct[a]);
+    NIDS.plot('c_missing', [
+      { type: 'bar', name: `Brut (${NIDS.fmt(m.n_raw)} lignes)`, x: keys, y: keys.map((k) => m.raw_pct[k]), marker: { color: NIDS.SERIES[1] }, hovertemplate: '%{x} : %{y:.2f} % manquant<extra>brut</extra>' },
+      { type: 'bar', name: 'Après nettoyage', x: keys, y: keys.map((k) => m.clean_pct[k] || 0), marker: { color: NIDS.SERIES[0] }, hovertemplate: '%{x} : %{y:.2f} %<extra>nettoyé</extra>' },
+    ], { barmode: 'group', yaxis: { title: '% manquant', range: [0, 100] } });
+    $('missing_notes').innerHTML = Object.entries(m.explanations).map(([k, v]) => `<b>${k}</b> : ${v}`).join('<br>') +
+      `<br>Toutes les autres colonnes sont complètes (0 %). Aucune valeur infinie détectée.`;
+  });
+
+  let last = null, timer = null;
+  function refresh() { clearTimeout(timer); timer = setTimeout(load, 180); }
+  async function load() {
+    $('nrows').textContent = 'Calcul…';
+    try { last = await NIDS.post('/api/eda', state); render(last); } catch (e) { NIDS.showError('t_desc', e); }
+  }
+  function render(d) {
+    if (!d) return;
+    $('nrows').textContent = `${NIDS.fmt(d.n_rows)} / ${NIDS.fmt(d.n_total)} flux · ${NIDS.fmt(d.n_attack)} attaques`;
+    if (!d.n_rows) { ['c_hist', 'c_box', 'c_cat', 'c_corr', 'c_scatter', 'c_comp'].forEach((id) => Plotly.purge(id)); $('t_desc').innerHTML = '<div class="loading">Aucun flux ne correspond aux filtres.</div>'; return; }
+    NIDS.table('t_desc', d.describe, [{ key: 'feature', label: 'Variable' }, { key: 'count', label: 'n' }, { key: 'mean', label: 'Moyenne' }, { key: 'std', label: 'Écart-type' },
+      { key: 'min', label: 'Min' }, { key: 'q1', label: 'Q1' }, { key: 'median', label: 'Médiane' }, { key: 'q3', label: 'Q3' }, { key: 'max', label: 'Max' },
+      { key: 'skew', label: 'Asymétrie' }, { key: 'kurtosis', label: 'Aplatissement' }, { key: 'missing', label: 'Manq.' }], { maxHeight: '420px' });
+    NIDS.table('t_desc_cat', d.describe_cat, [{ key: 'feature', label: 'Variable' }, { key: 'n_unique', label: 'Modalités' }, { key: 'mode', label: 'Mode' }, { key: 'mode_freq_pct', label: 'Fréq. du mode (%)' }]);
+    const h = d.hist, lx = h.log ? `log1p(${h.var})` : h.var;
+    $('var_desc').textContent = `${h.var} — ${opt.descriptions[h.var] || ''}`;
+    const centers = (e) => e.slice(0, -1).map((x, i) => (x + e[i + 1]) / 2);
+    let traces = [];
+    if (split === 'split') {
+      [['Normal', NIDS.STATUS.normal], ['Attaque', NIDS.STATUS.attack]].forEach(([n, col]) => {
+        const s = h[n]; if (!s) return;
+        traces.push({ type: 'bar', name: n, x: centers(s.edges), y: s.counts, marker: { color: col, opacity: 0.55 }, hovertemplate: `${n}<br>${lx} ≈ %{x:.3f}<br>%{y} flux<extra></extra>` });
+        if (s.kde_x.length) traces.push({ type: 'scatter', mode: 'lines', name: `KDE ${n}`, x: s.kde_x, y: s.kde_y, line: { color: col, width: 2 }, hoverinfo: 'skip' });
+      });
+    } else {
+      const s = h.all;
+      traces = [{ type: 'bar', name: 'Effectif', x: centers(s.edges), y: s.counts, marker: { color: NIDS.SERIES[0], opacity: 0.7 }, hovertemplate: `${lx} ≈ %{x:.3f}<br>%{y} flux<extra></extra>` },
+        { type: 'scatter', mode: 'lines', name: 'KDE', x: s.kde_x, y: s.kde_y, line: { color: '#f0efec', width: 2 }, hoverinfo: 'skip' }];
+    }
+    NIDS.plot('c_hist', traces, { barmode: 'overlay', bargap: 0.04, xaxis: { title: lx }, yaxis: { title: 'Nombre de flux' } });
+    NIDS.plot('c_box', d.box.map((b) => ({ type: 'box', name: b.cat, x: [b.cat], q1: [b.q1], median: [b.median], q3: [b.q3], lowerfence: [b.low], upperfence: [b.high],
+      marker: { color: b.cat === 'Normal' ? NIDS.STATUS.normal : NIDS.SERIES[0] }, line: { width: 1.5 }, hovertemplate: `${b.cat} (n=${b.n})<extra></extra>` })),
+      { showlegend: false, yaxis: { title: lx }, xaxis: { tickangle: -30 } });
+    const cf = d.cat_freq;
+    NIDS.plot('c_cat', [{ type: 'bar', name: 'Normal', x: cf.labels, y: cf.normal, marker: { color: NIDS.STATUS.normal } },
+      { type: 'bar', name: 'Attaque', x: cf.labels, y: cf.attack, marker: { color: NIDS.STATUS.attack } }],
+      { barmode: 'stack', bargap: 0.3, yaxis: { title: 'Nombre de flux' }, xaxis: { title: cf.var, tickangle: -30 } });
+    const comp = NIDS.CATS.map((c) => [c, d.composition[c] || 0]).filter(([, v]) => v > 0);
+    NIDS.plot('c_comp', [{ type: 'bar', orientation: 'h', y: comp.map((x) => x[0]), x: comp.map((x) => x[1]), marker: { color: comp.map(([c]) => c === 'Normal' ? NIDS.STATUS.normal : NIDS.STATUS.attack) },
+      text: comp.map((x) => NIDS.fmt(x[1])), textposition: 'outside', cliponaxis: false, hovertemplate: '%{y} : %{x} flux<extra></extra>' }], { yaxis: { autorange: 'reversed' }, xaxis: { range: [0, Math.max(...comp.map((x) => x[1])) * 1.18] }, margin: { l: 110, r: 30 } });
+    const c = d.corr;
+    NIDS.plot('c_corr', [{ type: 'heatmap', z: c.matrix, x: c.vars, y: c.vars, zmin: -1, zmax: 1, colorscale: NIDS.DIV, xgap: 1, ygap: 1,
+      hovertemplate: '%{y} × %{x}<br>ρ = %{z:.3f}<extra></extra>', colorbar: { thickness: 10 } }], { margin: { l: 110, b: 110 }, xaxis: { tickangle: -45 }, yaxis: { autorange: 'reversed' } });
+    const s = d.scatter;
+    const idx = (lab) => s.label.map((l, i) => l === lab ? i : -1).filter((i) => i >= 0);
+    NIDS.plot('c_scatter', [[0, 'Normal', NIDS.STATUS.normal], [1, 'Attaque', NIDS.STATUS.attack]].map(([lab, n, col]) => {
+      const ii = idx(lab);
+      return { type: 'scattergl', mode: 'markers', name: n, x: ii.map((i) => s.x[i] + 1), y: ii.map((i) => s.y[i] + 1), text: ii.map((i) => s.cat[i]),
+        marker: { color: col, size: 7, opacity: 0.6, line: { color: '#151a21', width: 1 } }, hovertemplate: `%{text}<br>${s.x_var}=%{x}<br>${s.y_var}=%{y}<extra></extra>` };
+    }), { xaxis: { type: 'log', title: `${s.x_var} + 1 (log)` }, yaxis: { type: 'log', title: `${s.y_var} + 1 (log)` } });
+  }
+  load();
+})();
+</script>
+{% endblock %}

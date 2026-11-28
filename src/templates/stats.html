@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Tests statistiques{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Tests statistiques</h1>
+  <p>Six familles de tests, chacune justifiée par la nature des variables. Toutes les p-values sont corrigées par
+    <b>Benjamini-Hochberg</b> (contrôle du taux de fausses découvertes, FDR = 5 %) car plusieurs dizaines de tests sont menés simultanément.
+    Calculs sur le jeu d'entraînement uniquement.</p></div></div>
+
+<div class="grid g4" id="kpis"></div>
+
+<div class="card section">
+  <div class="card-head"><h2>1 · Normalité : Shapiro-Wilk & D'Agostino K²</h2><span class="badge info">H₀ : la variable suit une loi normale</span></div>
+  <div class="callout"><b>Pourquoi ?</b> Le choix entre tests paramétriques (t de Student, ANOVA, Pearson) et non paramétriques dépend de la normalité.
+    Shapiro-Wilk est le test le plus puissant pour n ≤ 5 000 (on tire 4 000 observations) ; D'Agostino K² le complète en combinant asymétrie et aplatissement.
+    <b>Conséquence :</b> la normalité est rejetée pour toutes les variables → tests non paramétriques ci-dessous, transformation <code>log1p</code> des variables asymétriques et standardisation dans le prétraitement.</div>
+  <div class="grid g2"><div id="t_norm"></div><div id="c_skew" class="chart"></div></div>
+</div>
+
+<div class="card section">
+  <div class="card-head"><h2>2 · Mann-Whitney U : variable numérique vs classe (normal / attaque)</h2><span class="badge info">H₀ : même distribution dans les deux classes</span></div>
+  <div class="callout"><b>Pourquoi ?</b> Alternative non paramétrique au test t (variables non normales, deux groupes indépendants). La taille d'effet
+    <b>r rang-bisériale</b> = 1 − 2U/(n₁n₂) mesure la force de la séparation (|r| &gt; 0,5 : effet fort) — indispensable car avec n ≈ 73 000, presque tout devient « significatif ».</div>
+  <div class="grid g2"><div id="c_mw" class="chart tall"></div><div id="t_mw"></div></div>
+</div>
+
+<div class="card section">
+  <div class="card-head"><h2>3 · Kruskal-Wallis : variable numérique vs 10 catégories</h2><span class="badge info">H₀ : même distribution dans les 10 catégories</span></div>
+  <div class="callout"><b>Pourquoi ?</b> Généralisation de Mann-Whitney à k &gt; 2 groupes (alternative non paramétrique à l'ANOVA à un facteur). Taille d'effet ε² = (H − k + 1)/(n − k).</div>
+  <div class="grid g2"><div id="c_kw" class="chart tall"></div><div id="t_kw"></div></div>
+</div>
+
+<div class="grid g2 section">
+  <div class="card">
+    <div class="card-head"><h2>4 · Chi² d'indépendance + V de Cramér</h2><span class="badge info">H₀ : indépendance</span></div>
+    <div class="callout"><b>Pourquoi ?</b> Variables catégorielles (proto, state, service) vs cible. Condition de validité : effectifs théoriques ≥ 5 dans chaque case ; les modalités trop rares compte tenu de la plus petite classe (Worms) sont regroupées dans « autre » (dernière colonne = 0 %). Le V de Cramér (0–1) quantifie l'association indépendamment de n.</div>
+    <div id="t_chi"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>5 · Corrélation de Spearman avec la cible</h2></div>
+    <div class="callout"><b>Pourquoi ?</b> Spearman mesure une relation monotone sur les rangs : robuste aux queues lourdes et aux valeurs extrêmes (contrairement à Pearson).</div>
+    <div id="c_sp" class="chart tall"></div>
+  </div>
+</div>
+
+<div class="card section">
+  <div class="card-head"><h2>6 · Valeurs aberrantes (règle de Tukey, 1,5 × IQR)</h2><span class="badge warn">diagnostic — pas de suppression</span></div>
+  <div class="callout warn">Les « outliers » statistiques sont ici majoritairement des <b>attaques</b> (colonne « % chez les attaques ») : les supprimer effacerait le signal à détecter.
+    On les conserve et on réduit leur influence par <code>log1p</code> + standardisation, et par des modèles robustes (arbres).</div>
+  <div id="t_out"></div>
+</div>
+
+<div class="card section">
+  <h2>Matrice de Spearman complète (36 variables numériques)</h2>
+  <div id="c_spm" class="chart" style="height:640px"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(async () => {
+  const d = await NIDS.get('/api/stats');
+  const s = d.summary || {};
+  const kp = [['Variables non normales', `${s.n_normal_rejected ?? '—'} / ${s.n_tests_normality ?? '—'}`, 'Shapiro-Wilk, p BH < 0,05'],
+    ['Mann-Whitney significatifs', `${s.mw_significant ?? '—'} / ${s.mw_total ?? '—'}`, 'normal vs attaque'],
+    ['Kruskal-Wallis significatifs', `${s.kw_significant ?? '—'} / ${s.kw_total ?? '—'}`, '10 catégories'],
+    ['Tests réalisés', (d.normality.length * 2 + d.mann_whitney.length + d.kruskal.length + d.chi2.length + d.spearman.length), 'tous corrigés BH']];
+  document.getElementById('kpis').innerHTML = kp.map(([l, v, x]) => `<div class="card kpi"><span class="label">${l}</span><span class="value">${v}</span><span class="sub">${x}</span></div>`).join('');
+  const pfmt = (p) => p === null || p === undefined ? '—' : (p < 1e-300 ? '< 1e-300' : p.toExponential(2));
+  NIDS.table('t_norm', d.normality, [{ key: 'feature', label: 'Variable' }, { key: 'shapiro_W', label: 'W', fmt: 4 }, { key: 'shapiro_p_bh', label: 'p (BH)', fmt: pfmt },
+    { key: 'dagostino_K2', label: 'K²', fmt: 1 }, { key: 'skewness', label: 'Asymétrie', fmt: 2 }, { key: 'normal_at_5pct', label: 'Normale ?', fmt: (v) => v ? '<span class="badge normal">oui</span>' : '<span class="badge attack">non</span>' }], { maxHeight: '340px' });
+  const sk = d.normality.slice().sort((a, b) => Math.abs(b.skewness) - Math.abs(a.skewness)).slice(0, 20);
+  NIDS.plot('c_skew', [{ type: 'bar', x: sk.map((r) => r.feature), y: sk.map((r) => r.skewness), marker: { color: NIDS.SERIES[0] }, hovertemplate: '%{x}<br>asymétrie %{y:.1f}<extra></extra>' }],
+    { yaxis: { title: 'Coefficient d\'asymétrie' }, xaxis: { tickangle: -45 }, shapes: [{ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 2, y1: 2, line: { color: '#fab219', dash: 'dot', width: 1.5 } }],
+      annotations: [{ xref: 'paper', x: 1, y: 2, text: 'seuil log1p (2)', showarrow: false, yanchor: 'bottom', xanchor: 'right', font: { color: '#fab219', size: 11 } }] });
+  const mw = d.mann_whitney.slice(0, 25);
+  NIDS.plot('c_mw', [{ type: 'bar', orientation: 'h', y: mw.map((r) => r.feature), x: mw.map((r) => r.rank_biserial_r),
+    marker: { color: mw.map((r) => r.rank_biserial_r > 0 ? NIDS.SERIES[0] : NIDS.SERIES[1]) }, hovertemplate: '%{y}<br>r = %{x:.3f}<extra></extra>' }],
+    { yaxis: { autorange: 'reversed' }, xaxis: { title: 'r rang-bisériale (>0 : plus élevé chez les attaques)', range: [-1, 1] }, margin: { l: 130 } });
+  NIDS.table('t_mw', d.mann_whitney, [{ key: 'feature', label: 'Variable' }, { key: 'median_normal', label: 'Méd. normal' }, { key: 'median_attack', label: 'Méd. attaque' },
+    { key: 'rank_biserial_r', label: 'r', fmt: 3 }, { key: 'effect_size', label: 'Effet' }, { key: 'p_bh', label: 'p (BH)', fmt: pfmt }], { maxHeight: '420px' });
+  const kw = d.kruskal.slice(0, 25);
+  NIDS.plot('c_kw', [{ type: 'bar', orientation: 'h', y: kw.map((r) => r.feature), x: kw.map((r) => r.epsilon_sq), marker: { color: NIDS.SERIES[2] }, hovertemplate: '%{y}<br>ε² = %{x:.3f}<extra></extra>' }],
+    { yaxis: { autorange: 'reversed' }, xaxis: { title: 'ε² (taille d\'effet)' }, margin: { l: 130 } });
+  NIDS.table('t_kw', d.kruskal, [{ key: 'feature', label: 'Variable' }, { key: 'H', label: 'H', fmt: 0 }, { key: 'epsilon_sq', label: 'ε²', fmt: 3 }, { key: 'p_bh', label: 'p (BH)', fmt: pfmt }], { maxHeight: '420px' });
+  NIDS.table('t_chi', d.chi2, [{ key: 'feature', label: 'Variable' }, { key: 'target', label: 'Cible' }, { key: 'chi2', label: 'χ²', fmt: 0 }, { key: 'dof', label: 'ddl' },
+    { key: 'cramers_v', label: 'V de Cramér', fmt: 3 }, { key: 'p_bh', label: 'p (BH)', fmt: pfmt }, { key: 'pct_expected_lt5', label: '% eff. théo. < 5', fmt: 1 }]);
+  const sp = d.spearman.slice(0, 22);
+  NIDS.plot('c_sp', [{ type: 'bar', orientation: 'h', y: sp.map((r) => r.feature), x: sp.map((r) => r.spearman_rho), marker: { color: sp.map((r) => r.spearman_rho > 0 ? NIDS.SERIES[0] : NIDS.SERIES[1]) }, hovertemplate: '%{y}<br>ρ = %{x:.3f}<extra></extra>' }],
+    { yaxis: { autorange: 'reversed' }, xaxis: { title: 'ρ de Spearman avec label', range: [-1, 1] }, margin: { l: 130 } });
+  NIDS.table('t_out', d.outliers, [{ key: 'feature', label: 'Variable' }, { key: 'q1', label: 'Q1' }, { key: 'q3', label: 'Q3' }, { key: 'iqr', label: 'IQR' },
+    { key: 'pct_outliers', label: '% outliers', fmt: 2 }, { key: 'pct_outliers_attack', label: '% chez les attaques', fmt: 2 }], { maxHeight: '360px' });
+  if (d.spearman_matrix) NIDS.plot('c_spm', [{ type: 'heatmap', z: d.spearman_matrix.matrix, x: d.spearman_matrix.vars, y: d.spearman_matrix.vars, zmin: -1, zmax: 1, colorscale: NIDS.DIV, xgap: 1, ygap: 1, hovertemplate: '%{y} × %{x}<br>ρ = %{z:.3f}<extra></extra>' }],
+    { margin: { l: 130, b: 130 }, xaxis: { tickangle: -45 }, yaxis: { autorange: 'reversed' } });
+})().catch((e) => NIDS.showError('kpis', e));
+</script>
+{% endblock %}
